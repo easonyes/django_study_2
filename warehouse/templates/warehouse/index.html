@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>理赔信息首页</title>
+</head>
+<body>
+    <h1>礼品信息首页</h1>
+    <div>
+        {% if presents %}
+            <ul>
+                {% for present in presents %}
+                    <li>
+                        礼品号：{{ present.id }}
+                        礼品名：{{ present.name }}
+                        礼品信息：{{ present.introduction }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        <a href="{% url 'add' %}">添加学生</a>
+    </div>
+</body>
+</html>
