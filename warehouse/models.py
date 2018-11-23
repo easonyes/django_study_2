@@ -56,18 +56,14 @@ class Present(models.Model):
     off = models.IntegerField(default=0) #0代表不打折， 1代表打折
     off_cost = models.DecimalField(max_digits=3, decimal_places=2, null=True)
     url = models.CharField(max_length=200, null=True)
-    #pdepot = models.ManyToManyField(Depot, through='depot_present')
+    pdepot = models.ForeignKey(
+        Depot,
+        on_delete=models.CASCADE
+    )
 
     class Meta():
         db_table = 'Present'
 
 
-class depot_present(models.Model):
-    depot = models.ForeignKey(Depot)
-    present = models.ForeignKey(Present)
 
-    add_reason = models.CharField(max_length=200, null=True)
-
-    class Meta():
-        db_table = 'depot_present'
 
