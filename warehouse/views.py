@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse , JsonResponse
+from django.http import HttpResponse, JsonResponse, QueryDict
 from django.urls import reverse
 from django.core import serializers
 from django.forms.models import model_to_dict
@@ -64,7 +64,8 @@ def add_data(request):
     return redirect(reverse('index'))
 """
 
-#undone
+# undone
+# not test
 def login(request):
     context = {
         'log_status': 0
@@ -84,7 +85,8 @@ def login(request):
         else:
             return HttpResponse(json.dumps(context), content_type="application/json")
 
-#undone
+# undone
+# not test
 def logout(request):
     context={
         'IS_LOGOUT': 0
@@ -97,43 +99,90 @@ def logout(request):
     else:
         return HttpResponse(json.dumps(context), content_type="application/json")
 
-#undone
+# undone
+# not test
 def register(request):
     return
 
-#undone
+# done
+# not test
 """
 gifts
 返回仓库中的礼品信息，如果是仓库管理员，就返回自己仓库的信息，如果是普通员工，就返回所有礼品信息
 method: GET
 """
-def gifts(request):
+def gifts(request, employee_id):
+    employee = Employee.objects.get(pk=employee_id)
+    context = {
+        'error': 0
+    }
+    if(not employee) or ('EMPLOYEE_ID' not in request.session) or ('IS_LOGIN' not in request.session) \
+        or (request.session['EMPLOYEE_ID' != employee_id]):
+        context['error'] = 1
+        return HttpResponse(json.dumps(context), content_type="application/json")
+    if request.method == 'GET':
+        employee = employee[0]
+        if employee.emporder == 1:
+            presents = Present.objects.all()
+            '''
+            presents = []
+            for p in present:
+                presents.append(p)
+            '''
+            conx = serializers.serialize("json", presents)
+            return HttpResponse(conx, content_type="application/json")
+        elif employee.emporder == 2:
+            depots = Depot.objects.filter(manager=employee.id)
+            presents = []
+            for depot in depots:
+                present = Present.objects.filter(pdepot=depot.id)
+                presents.append(present)
+            conx = serializers.serialize("json", presents)
+            return HttpResponse(conx, content_type="application/json")
+            # present = Present.objects.filter(pdepot=)
+        else:
+            context['error'] = 2
+            return HttpResponse(json.dumps(context), content_type="application")
     return
 
-#undone
+# undone
+# not test
 """
 add
 添加一个礼品，仓库管理员可操作，但添加时其默认状态值为0，即待审核状态
 method：POST
 """
-def add(request):
+def add(request, employee_id):
+    employee = Employee.objects.get(pk=employee_id)
+    context = {
+        'error': 0
+    }
+    if (not employee) or ('EMPLOYEE_ID' not in request.session) or ('IS_LOGIN' not in request.session) \
+        or (request.session['EMPLOYEE_ID'] != employee_id):
+        context['error'] = 1
+        return HttpResponse(json.dumps(context), content_type="application/json")
+    if request.method == 'POST':
+        name = request.POST['name']
     return
 
-#undone
+# undone
+# not test
 """
 modify
 修改一个礼品的信息，仓库管理员可操作，但不可修改其状态值
 method：PUT
 """
 
-#undone
+# undone
+# not test
 """
 delete
 删除一个礼品，仅仓库管理员可操作
 method：DELETE
 """
 
-#undone
+# undone
+# not test
 """
 sell
 修改一个礼品的状态值，即上架或下架该礼品，仅普通员工可操作
