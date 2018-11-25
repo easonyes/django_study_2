@@ -162,7 +162,30 @@ def add(request, employee_id):
         context['error'] = 1
         return HttpResponse(json.dumps(context), content_type="application/json")
     if request.method == 'POST':
-        name = request.POST['name']
+        pname = request.POST['name']
+        introduction = request.POST['introduction']
+        on_date = request.POST['on_date']
+        store_num = request.POST['store_num']
+        status = 0
+        cost = request.POST['cost']
+        hot = request.POST['hot']
+        off = request.POST['off']
+        off_cost = request.POST['off_cost']
+        url = request.POST['url']
+        pdepot = request.POST['pdepot']
+        depots = Depot.objects.all()
+        pdepots = []
+        for depot in depots:
+            did = depot.id
+            pdepots.append(did)
+        if pdepot not in pdepots:
+            context['error'] = 3
+            return HttpResponse(json.dumps(context), content_type="application/json")
+        else:
+            obj = Present(name=pname, introduction=introduction, on_date=on_date, store_num=store_num,
+                          status=status, cost=cost, hot=hot, off=off, off_cost=off_cost, url=url, pdepot=pdepot)
+            obj.save()
+            return redirect(reverse('index'))
     return
 
 # undone

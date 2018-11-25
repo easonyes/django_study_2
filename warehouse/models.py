@@ -48,6 +48,7 @@ class Depot(models.Model):
 
 class Present(models.Model):
     name = models.CharField(max_length=200)
+    introduction = models.CharField(max_length=200, null=True)
     on_date = models.DateTimeField()
     store_num = models.IntegerField()
     status = models.IntegerField(default=0) #0代表审核， 1代表上架， 2代表上架
