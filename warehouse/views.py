@@ -64,8 +64,15 @@ def add_data(request):
     return redirect(reverse('index'))
 """
 
-# undone
-# not test
+def index(request):
+    # 查看所有礼品信息
+    #lists = warehouse.objects.all()
+    # 返回主页，并将信息在主页显示
+    #return render(request, 'index.html', {'presents':lists})
+    return
+
+# done
+# tested
 def login(request):
     context = {
         'log_status': 0
@@ -73,7 +80,7 @@ def login(request):
     if request.method == 'POST':
         name = request.POST['name']
         password = request.POST['password']
-        employee = Employee.objects.filter(empname=name , emppassword=password)
+        employee = Employee.objects.filter(empname=name, emppassword=password)
 
         if employee:
             request.session['IS_LOGIN'] = True
@@ -121,7 +128,6 @@ def gifts(request, employee_id):
         context['error'] = 1
         return HttpResponse(json.dumps(context), content_type="application/json")
     if request.method == 'GET':
-        employee = employee[0]
         if employee.emporder == 1:
             presents = Present.objects.all()
             '''
@@ -146,7 +152,7 @@ def gifts(request, employee_id):
     return
 
 # undone
-# not test
+# tested
 """
 add
 添加一个礼品，仓库管理员可操作，但添加时其默认状态值为0，即待审核状态
@@ -171,22 +177,37 @@ def add(request, employee_id):
         hot = request.POST['hot']
         off = request.POST['off']
         off_cost = request.POST['off_cost']
+        if not hot:
+            hot = 0
+        if not off:
+            off = 0
+        if not off_cost:
+            off_cost = 0
         url = request.POST['url']
-        pdepot = request.POST['pdepot']
-        depots = Depot.objects.all()
-        pdepots = []
-        for depot in depots:
-            did = depot.id
-            pdepots.append(did)
-        if pdepot not in pdepots:
-            context['error'] = 3
-            return HttpResponse(json.dumps(context), content_type="application/json")
-        else:
-            obj = Present(name=pname, introduction=introduction, on_date=on_date, store_num=store_num,
-                          status=status, cost=cost, hot=hot, off=off, off_cost=off_cost, url=url, pdepot=pdepot)
-            obj.save()
-            return redirect(reverse('index'))
+        depot = Depot.objects.get(manager=employee)
+
+        #pdepot = Depot.objects.get(id=depot)
+        # pdepot = request.POST['pdepot']
+        # depots = Depot.objects.all()
+        # pdepots = []
+        # for depot in depots:
+        #    did = depot.id
+        #    pdepots.append(did)
+        # if pdepot not in pdepots:
+        #    context['error'] = 3
+        #    return HttpResponse(json.dumps(context), content_type="application/json")
+        # else:
+        obj = Present(name=pname, introduction=introduction, on_date=on_date, store_num=int(store_num),
+                      status=status, cost=float(cost), hot=int(hot), off=int(off),
+                      off_cost=off_cost, url=url, pdepot=depot)
+        obj.save()
+        # return redirect(reverse('index'))
+        return HttpResponse(json.dumps(context), content_type="application/json")
+        # return
     return
+
+
+
 
 # undone
 # not test
@@ -195,6 +216,17 @@ modify
 修改一个礼品的信息，仓库管理员可操作，但不可修改其状态值
 method：PUT
 """
+def modify(request, employee_id):
+    employee = Employee.objects.get(pk=employee_id)
+    context = {
+        'error': 0
+    }
+    if (not employee) or ('EMPLOYEE_ID' not in request.session) or ('IS_LOGIN' not in request.session) \
+            or (request.session['EMPLOYEE_ID'] != employee_id):
+        context['error'] = 1
+        return HttpResponse(json.dumps(context), content_type="application/json")
+    if request.method == 'PUT':
+        return
 
 # undone
 # not test

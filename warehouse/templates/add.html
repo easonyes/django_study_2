@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}信息</title>
+</head>
+<body>
+    <div>
+        <form action="{% url 'warehouse:add' %}" method="post">
+            {% csrf_token %}
+            <input type="text" name="name" placeholder="礼品名" required value="{{ present.name }}" >
+            <input type="text" name="introduction" placeholder="礼品简介" value="{{ present.introduction }}">
+            <input type="date" name="on_date" required value="{{ present.on_date }}">
+            <input type="text" name="store_num" placeholder="库存" required value="{{ present.store_num }}">
+            <select name="off">
+                <option value="1">打折</option>
+                <option value="0">不打折</option>
+            </select>
+            <input type="text" name="off_cost" placeholder="折扣" value="{{ present.off_cost }}">
+            <input type="text" name="hot" placeholder="热度" value="{{ present.hot }}">
+            <input type="text" name="cost" placeholder="价格" required value="{{ present.cost }}">
+            <input type="text" name="url" placeholder="图片" value="{{ present.url }}">
+            {% comment %}<input type="text" name="pdepot" placeholder="仓库" value="{{ present.pdepot }}">{% endcomment %}
+            <input type="submit" value="保存">
+        </form>
+    </div>
+</body>
+</html>

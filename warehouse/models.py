@@ -55,7 +55,7 @@ class Present(models.Model):
     cost = models.DecimalField(max_digits=11, decimal_places=2)
     hot = models.IntegerField(default=0)
     off = models.IntegerField(default=0) #0代表不打折， 1代表打折
-    off_cost = models.DecimalField(max_digits=3, decimal_places=2, null=True)
+    off_cost = models.DecimalField(max_digits=3, decimal_places=2, default=0, null=True)
     url = models.CharField(max_length=200, null=True)
     pdepot = models.ForeignKey(
         Depot,
