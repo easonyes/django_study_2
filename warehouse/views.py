@@ -5,64 +5,15 @@ from django.core import serializers
 from django.forms.models import model_to_dict
 import json
 from warehouse.models import *
+from rest_framework import viewsets
+from warehouse.serializers import ItemSerializer, PresentSerializer
 
 # Create your views here.
 
-"""
 
-def index(request):
-    # 查看所有礼品信息
-    #lists = warehouse.objects.all()
-    # 返回主页，并将信息在主页显示
-    #return render(request, 'index.html', {'presents':lists})
-
-
-def login(request):
-    if request.method == 'POST':
-        name = request.POST['empname']
-        psd = request.POST['emppassword']
-        emploee = Emploee.objects.filter(empname=name, emppassword=psd )
-        context = {
-            'log_status': 0,
-            'order': 0
-        }
-        request.session['IS_LOGIN'] = False
-        if emploee:
-            context['log_status'] = 1
-            context['order'] = emploee.emporder
-            request.session['IS_LOGIN'] = True
-            return render(request, request.path, context)
-        else:
-            return render(request, request.path, context)
-    else:
-        return render(request, request.path, context='')
-
-def add_page(request):
-    return render(request, 'adddata.html', {'title': '添加', 'urlname': 'add_data', 'warehouse': ''})
-
-
-def add_data(request):
-    iname = request.POST['name']
-    iintroduction = request.POST['introduction']
-    iondate = request.POST['ondate']
-    istorenum = request.POST['storenum']
-    ioff = request.POST['off']
-    offcost = request.POST['offcost']
-    if offcost:
-        ioffcost = float(offcost)
-    else:
-        ioffcost = 0
-    hot = request.POST['hot']
-    if hot:
-        ihot = int(hot)
-    else:
-        ihot = 0
-    iprice = request.POST['price']
-    obj = warehouse(name=iname, introduction=iintroduction, ondate=iondate, storenum=int(istorenum), status=2, off=int(ioff),
-                    offcost=ioffcost, hot=ihot, price=int(iprice))
-    obj.save()
-    return redirect(reverse('index'))
-"""
+class ItemViewSet(viewsets.ModelViewSet):
+    queryset = Present.objects.all()
+    serializers_class = ItemSerializer
 
 def index(request):
     # 查看所有礼品信息
@@ -80,12 +31,12 @@ def login(request):
     if request.method == 'POST':
         name = request.POST['name']
         password = request.POST['password']
-        employee = Employee.objects.filter(empname=name, emppassword=password)
+        employee = Employee.objects.filter(name=name, password=password)
 
         if employee:
             request.session['IS_LOGIN'] = True
             request.session['EMPLOYEE_ID'] = employee[0].id
-            request.session['ORDER'] = employee[0].emporder
+            request.session['ORDER'] = employee[0].order
             conx = serializers.serialize("json", employee)
             conx2 = '{"log_status":1, "employee": ' + conx + '}'
             return HttpResponse(conx2, content_type="application/json")
@@ -129,16 +80,31 @@ def gifts(request, employee_id):
         context['error'] = 1
         return HttpResponse(json.dumps(context), content_type="application/json")
     if request.method == 'GET':
-        if employee.emporder == 1:
+        num = QueryDict(request.body)
+        count = num.get('count')
+        offset = num.get('offset')
+        # count = request.GET.get('count')
+        if not count:
+            count = 10
+        else:
+            count = int(count)
+        # offset = request.GET.get('offset')
+        if not offset:
+            offset = 0
+        else:
+            offset = int(offset)
+        # 如果是普通员工，返回所有礼品
+        if employee.order == 1:
             presents = Present.objects.all()
             '''
             presents = []
             for p in present:
                 presents.append(p)
             '''
-            conx = serializers.serialize("json", presents)
+            conx = serializers.serialize("json", presents[offset:offset+count])
             return HttpResponse(conx, content_type="application/json")
-        elif employee.emporder == 2:
+        # 如果是仓库管理员，返回自己仓库的礼品信息
+        elif employee.order == 2:
             depots = Depot.objects.get(manager=employee.id)
             presents = Present.objects.filter(pdepot=depots)
             conx = serializers.serialize("json", presents)
@@ -177,18 +143,6 @@ def add(request, employee_id):
         off_cost = 0
         url = request.POST['url']
         depot = Depot.objects.get(manager=employee)
-
-        #pdepot = Depot.objects.get(id=depot)
-        # pdepot = request.POST['pdepot']
-        # depots = Depot.objects.all()
-        # pdepots = []
-        # for depot in depots:
-        #    did = depot.id
-        #    pdepots.append(did)
-        # if pdepot not in pdepots:
-        #    context['error'] = 3
-        #    return HttpResponse(json.dumps(context), content_type="application/json")
-        # else:
         obj = Present(name=pname, introduction=introduction, on_date=on_date, store_num=int(store_num),
                       status=status, cost=float(cost), hot=int(hot), off=int(off),
                       off_cost=off_cost, url=url, pdepot=depot)
@@ -219,7 +173,7 @@ def modify(request, employee_id):
         modify = QueryDict(request.body)
         id = modify.get('id')
         present = Present.objects.filter(id=id)
-        if not present:
+        if not present or present[0].pdepot != Depot.objects.get(manager=employee):
             context['error'] = 2
             return HttpResponse(json.dumps(context), content_type="application/json")
         status = present[0].status
@@ -259,7 +213,7 @@ def delete(request, employee_id):
         delete = QueryDict(request.body)
         key = delete.get('id')
         present = Present.objects.filter(id=key)
-        if not present:
+        if not present or present[0].pdepot != Depot.objects.get(manager=employee):
             context['error'] = 2
             return HttpResponse(json.dumps(context), content_type="application/json")
         conx = serializers.serialize("json", present)
@@ -282,6 +236,7 @@ def sell(request, employee_id):
             or (request.session['EMPLOYEE_ID'] != employee_id):
         context['error'] = 1
         return HttpResponse(json.dumps(context), content_type="application/json")
+    # 修改礼品的状态、热度及折扣信息请求
     if request.method == 'PUT':
         sell = QueryDict(request.body)
         key = sell.get('id')
@@ -305,24 +260,30 @@ def sell(request, employee_id):
                        url=url, pdepot=pdepot)
         conx = serializers.serialize("json", present)
         return HttpResponse(conx, content_type="application/json")
+    # 返回礼品请求
     if request.method == 'GET':
         depots = QueryDict(request.body)
         key1 = depots.get('depot_id')
         key2 = depots.get('present_status')
+        # 返回某一个仓库礼品请求
         if key1:
             depot = Depot.objects.get(id=key1)
             presents = Present.objects.filter(pdepot=depot)
             conx = serializers.serialize("json", presents)
             return HttpResponse(conx, content_type="application/json")
+        # 根据状态返回礼品请求
         if key2:
+            # 返回上架礼品
             if key2 == '1':
                 presents = Present.objects.filter(status=key2)
                 conx = serializers.serialize("json", presents)
                 return HttpResponse(conx, content_type="application/json")
+            # 返回待审核礼品
             elif key2 == '0':
                 presents = Present.objects.filter(status=key2)
                 conx = serializers.serialize("json", presents)
                 return HttpResponse(conx, content_type="application/json")
+            # 返回未上架礼品
             elif key2 == '2':
                 presents = Present.objects.filter(status=key2)
                 conx = serializers.serialize("json", presents)

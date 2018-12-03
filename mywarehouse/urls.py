@@ -15,8 +15,23 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
+from rest_framework import routers
+from warehouse import views
+from django.conf.urls import url, include
+# from django.contrib.auth.models import User
+# from rest_framework import routers, serializers, viewsets
+#
+# class ItemSerializer(serializers.HyperlinkedModelSerializer):
+#     class Meta:
+#         model = Item
+
+# router = routers.DefaultRouter()
+# router.register(r'items', views.ItemViewSet)
+# router.register(r'presents', views.Pre)
 
 urlpatterns = [
+    # url(r'^', include(router.urls)),
     path('warehouse/', include('warehouse.urls')),
     path('admin/', admin.site.urls),
+    # url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]
